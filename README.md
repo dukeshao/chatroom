@@ -3,4 +3,4 @@
  安装依赖
  npm i
  启动
- node server.js
+ node back/server.js
