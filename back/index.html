@@ -219,7 +219,7 @@
 
             if (roomid != null && roomid != "") {
                 $("#keywords").focus();
-                let socket = io.connect("http://120.24.42.254:3000?roomid=" + roomid);
+                let socket = io.connect("http://127.0.0.1:3000?roomid=" + roomid);
 
                 socket.emit("join", {
                     username: userInfo.username
