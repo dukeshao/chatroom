@@ -4,8 +4,6 @@
 ```bash
 #安装依赖 express + socket.io
 npm i
-#进入目录
-cd back
 #启动
 node server
 ```
