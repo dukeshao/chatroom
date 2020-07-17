@@ -1,0 +1,312 @@
+<!doctype html>
+<html>
+
+    <head>
+        <title>Socket.IO chat</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font: 13px Helvetica, Arial;
+                background: #C0CDDE;
+                padding: 8px 0 80px 0;
+            }
+
+            .editor {
+                background: #000;
+                padding: 3px;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+            }
+
+            .editor input {
+                border: 0;
+                padding: 10px;
+                width: 90%;
+                margin-right: 0.5%;
+            }
+
+            .editor button {
+                width: 9%;
+                background: rgb(130, 224, 255);
+                border: none;
+                padding: 10px;
+            }
+
+            #list {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+            }
+
+
+            #list .tc {
+                color: #446083;
+                font-size: 12px;
+                text-align: center;
+                height: 24px;
+                line-height: 24px;
+            }
+
+            #list .tc span {
+                padding: 2px 6px;
+                background: #eee;
+                border-radius: 3px;
+            }
+
+            #list li {
+                /* padding: 5px 10px; */
+                /* border: 1px solid #333; */
+            }
+
+            /*  别人发的消息  */
+            #list>dd.other li.nick-name {
+                line-height: 12px;
+                height: 24px;
+                padding: 10px 10px 2px 12px;
+                color: #446083;
+            }
+
+            #list>dd.other li.detail {
+                /* line-height: 24px; */
+                padding: 2px 10px;
+                display: flex;
+                flex-wrap: nowrap;
+                /* align-items: center; */
+
+            }
+
+            #list>dd.other li.detail .head-icon {
+                flex: none;
+                width: 30px;
+                height: 30px;
+                background: tomato;
+                border-radius: 3px;
+                margin-right: 20px;
+            }
+
+            #list>dd.other li.detail .text {
+                color: #446083;
+                font-size: 14px;
+                padding: 6px 8px 6px 12px;
+                background: #fff;
+                border-radius: 3px;
+                position: relative;
+                max-width: 80%;
+            }
+
+            #list>dd.other li.detail .text:before {
+                content: "";
+                display: block;
+                position: absolute;
+                background: #fff;
+                width: 4px;
+                height: 4px;
+                left: -17px;
+                top: 13px;
+                border-radius: 50%;
+            }
+
+            #list>dd.other li.detail .text:after {
+                content: "";
+                display: block;
+                position: absolute;
+                background: #fff;
+                width: 8px;
+                height: 8px;
+                left: -11px;
+                top: 6px;
+                border-radius: 50%;
+            }
+
+            /*  自己发的消息  */
+            #list>dd.me li.nick-name {
+                line-height: 12px;
+                height: 24px;
+                padding: 10px 10px 2px 12px;
+                color: #446083;
+                text-align: right;
+            }
+
+            #list>dd.me li.detail {
+                /* line-height: 24px; */
+                padding: 2px 10px;
+                display: flex;
+                flex-wrap: nowrap;
+                flex-direction: row-reverse;
+                /* align-items: center; */
+
+            }
+
+            #list>dd.me li.detail .head-icon {
+                flex: none;
+                width: 30px;
+                height: 30px;
+                background: #617ada;
+                border-radius: 3px;
+                margin-left: 20px;
+            }
+
+            #list>dd.me li.detail .text {
+                color: #1d3654;
+                font-size: 14px;
+                padding: 6px 8px 6px 12px;
+                background: #49d449;
+                border-radius: 3px;
+                position: relative;
+                max-width: 80%;
+            }
+
+            #list>dd.me li.detail .text:before {
+                content: "";
+                display: block;
+                position: absolute;
+                background: #49d449;
+                width: 4px;
+                height: 4px;
+                right: -17px;
+                top: 13px;
+                border-radius: 50%;
+            }
+
+            #list>dd.me li.detail .text:after {
+                content: "";
+                display: block;
+                position: absolute;
+                background: #49d449;
+                width: 8px;
+                height: 8px;
+                right: -11px;
+                top: 6px;
+                border-radius: 50%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="list">
+
+        </div>
+        <div class="editor">
+            <input id="keywords" autocomplete="off" style="border-radius:3px;" /><button style="border-radius:3px;"
+                id="send">Send</button>
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
+        <script>
+
+            let roomid = prompt("请输入房间号", "");
+
+            let userInfo = {
+                username: prompt("请输入昵称", "")
+            };
+            // $("#keywords").focus();
+
+            function scrollBelow() {
+                setTimeout(function () {
+                    //设置滚动条到最底部
+                    window.scrollTo(0, $("#list")[0].scrollHeight)
+                    // $("#list")[0].scrollTop = $("#list")[0].scrollHeight;
+                }, 100);
+            }
+
+
+            if (roomid != null && roomid != "") {
+                $("#keywords").focus();
+                let socket = io.connect("http://120.24.42.254:3000?roomid=" + roomid);
+
+                socket.emit("join", {
+                    username: userInfo.username
+                });
+
+                socket.on("message", function (msg) {
+                    switch (msg.event) {
+                        case "join":
+                            if (msg.data.username) {
+                                console.log(msg.data.username + "加入了聊天室");
+                                let data = {
+                                    text: msg.data.username + "加入了聊天室"
+                                };
+                                showNotice(data);
+                            };
+                            break;
+                        case "broadcast_say":
+                            if (msg.data.username !== userInfo.username) {
+                                console.log(msg.data.username + "说：" + msg.data.text);
+                                showMessage(msg.data);
+                            };
+                            break;
+                        case "broadcast_quit":
+                            if (msg.data.username) {
+                                console.log(msg.data.username + "离开了聊天室");
+                                let data = {
+                                    text: msg.data.username + "离开了聊天室"
+                                };
+                                showNotice(data);
+                            }
+                    }
+                })
+                //点击发送按钮
+                $("#send").click(function () {
+                    console.log("发送信息")
+                    let keywords = $("#keywords");
+                    if (keywords.val() === "") {
+                        keywords.focus();
+                        return false;
+                    }
+                    let data = {
+                        text: keywords.val(),
+                        type: 0,
+                        username: userInfo.username
+                    }
+                    //向服务器发送消息
+                    socket.emit("say", data);
+
+                    showMessage(data);
+                    keywords.val("");
+                    keywords.focus();
+                })
+
+                //展示消息
+                function showMessage(data) {
+                    let str = `<dd class=${data.type === 0 ? "me" : "other"}>
+                            <ul>
+                                <li class="nick-name">${data.username}</li>
+                                <li class="detail">
+                                    <div class="head-icon"></div>
+                                    <div class="text">${data.text}</div>
+                                </li>
+                            </ul>
+                            </dd>`;
+                    $("#list").html($("#list").html() + str);
+                    scrollBelow()
+                }
+
+                //展示通知
+                function showNotice(data) {
+                    let str = `<dd class="tc"><span>${data.text}</span></dd>`
+                    $("#list").html($("#list").html() + str);
+                    scrollBelow();
+                }
+
+                //回车事件
+                document.onkeyup = function (e) {
+                    if (!e) e = window.event;
+                    if ((e.keyCode || e.which) == 13) {
+                        $("#send")[0].click();
+                    }
+                }
+            }
+
+
+
+        </script>
+    </body>
+
+</html>
