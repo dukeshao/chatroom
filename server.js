@@ -3,7 +3,7 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/src');
+    res.sendFile(__dirname + '/back/index.html');
 });
 
 let users = {};
